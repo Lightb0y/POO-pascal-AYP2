@@ -66,7 +66,7 @@ begin
      sacarEncomienda:= nil;
 end;
 
-function cuantasEncomiendasTenes():integer;
+function cartero.cuantasEncomiendasTenes():integer;
  begin
    cuantasEncomiendasTenes:= cantidadDeEncomiendas;
  end;
