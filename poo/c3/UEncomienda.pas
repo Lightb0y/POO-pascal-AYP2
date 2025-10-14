@@ -62,8 +62,8 @@ implementation
     begin
       getPeso:= peso;
     end;
-   function toString():ansistring;
+   function encomienda.toString():ansistring;
     begin
-      toString:= 'Destinatario: '+ destinatario + ' | Remitente: '+ remitente + ' |Peso: ' format('%10.3f',[peso]);
+      toString:= 'Destinatario: '+ destinatario + ' | Remitente: '+ remitente + ' |Peso: ' + format('%10.3f',[peso]);
     end;
-end.    
+end.     
