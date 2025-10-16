@@ -1,0 +1,138 @@
+program Verduleria2y3;
+uses GenericLinkedList, UDateTime, URandomGenerator , UBalanza, UTicket, UProducto;
+
+type
+	listaProducto = specialize LinkedList<Producto>;
+	listaTickets = specialize LinkedList<Ticket>;
+
+procedure cargarCarrito(var car : listaProducto; rg : RandomGenerator);
+var
+	prodAct : Producto;
+	i : integer;
+	cantidad : integer;
+begin
+	cantidad := rg.getInteger(1, 20);
+	car := listaProducto.create();
+	for i:=1 to cantidad do
+	begin
+		prodAct := Producto.create(rg.getLabel(), rg.getReal(0.1, 5.0));
+		car.add(prodAct);
+	end;
+end;
+
+procedure printCarrito(car: listaProducto);
+begin
+	car.reset();
+	while (not car.eol()) do
+	begin
+		writeln(car.current().getNombre(), ' : ', car.current().getPeso():0:2, ' kg');
+		car.next();
+	end;
+end;
+
+procedure pesarCarrito(car : listaProducto; bal : balanza; var tic : ticket; rg:RandomGenerator);
+var
+	fechaMin, fechaMax : Date;
+	horaMin, horaMax : Time;
+begin
+	fechaMin := Date.create(1, 9, 2024);
+	fechaMax := Date.create(30, 9, 2024);
+	horaMin := Time.create(0, 0, 0);
+	horaMax := Time.create(23, 59, 59);
+
+	bal.limpiar();
+	car.reset();
+	while (not car.eol()) do
+	begin
+		bal.setPrecioPorKilo(rg.getReal(250, 2000));
+		bal.pesar(car.current().getPeso());
+		car.next();
+	end;
+
+	tic := ticket.create(rg.getTime(horaMin, horaMax), rg.getDate(fechaMin, fechaMax));
+	tic.setCliente(rg.getString(6));
+	tic.setTotalAPagar(bal.getTotalAPagar());
+
+	car.reset();
+	while (not car.eol()) do
+	begin
+	tic.agregarProducto(car.current());
+	car.next();
+end;
+end;
+
+{Implemente un módulo recursivo que reciba todos los tickets generados
+y devuelva la cantidad de tickets con más de tres productos.}
+function contarTicketsConMasDeTresProductos(tickets: listaTickets): integer;
+begin
+	if tickets.eol() then
+		contarTicketsConMasDeTresProductos := 0
+	else
+	begin
+		if tickets.current().cuantosProductosTenes() > 3 then
+			contarTicketsConMasDeTresProductos := 1 + contarTicketsConMasDeTresProductos(tickets)
+		else
+			contarTicketsConMasDeTresProductos := contarTicketsConMasDeTresProductos(tickets);
+	tickets.next();
+end;
+end;
+
+{Implemente un módulo recursivo que reciba todos los tickets generados
+y devuelva aquellos cuyo total a pagar es mayor a un monto recibido por
+parámetro.}
+procedure imprimirTicketsConMontoMayor(tickets: listaTickets; montoMinimo: real);
+begin
+	if not tickets.eol() then
+	begin
+		if tickets.current().getTotalAPagar() > montoMinimo then
+			tickets.current().imprimir();
+		tickets.next();
+		imprimirTicketsConMontoMayor(tickets, montoMinimo);
+	end;
+end;
+
+var
+	rg : RandomGenerator;
+	chango : listaProducto;
+	balan : balanza;
+	ticketAct : ticket;
+	todosLosTickets : listaTickets;
+	index : integer;
+	cantidadTicketsConMasDeTres : integer;
+	montoMinimo : real;
+BEGIN
+	rg := RandomGenerator.create();
+	rg.addLabel('Papa');
+	rg.addLabel('Morron');
+	rg.addLabel('Cebolla');
+	rg.addLabel('Perejil');
+	rg.addLabel('Puerro');
+	rg.addLabel('Verdeo');
+	rg.addLabel('Chauchas');
+	rg.addLabel('Ajo');
+	rg.addLabel('Tomate');
+	rg.addLabel('Lechuga');
+	
+	balan := Balanza.create();
+	todosLosTickets := listaTickets.create();
+	
+	{Escriba un programa que genere 20 compras, almacenando los 20 tickets}
+	for index:=1 to 20 do
+	begin
+		cargarCarrito(chango, rg);
+		pesarCarrito(chango, balan, ticketAct, rg);
+		todosLosTickets.add(ticketAct);
+	end;
+	
+	{imprima cuántos corresponden a compras con más de tres productos}
+	todosLosTickets.reset();
+	cantidadTicketsConMasDeTres := contarTicketsConMasDeTresProductos(todosLosTickets);
+	writeln('Cantidad de tickets con más de 3 productos: ', cantidadTicketsConMasDeTres);
+	
+	{Finalmente imprima solo aquellos cuyo total a pagar es mayor a un monto leído por teclado}
+	write('Ingrese el monto mínimo: ');
+	readln(montoMinimo);
+	writeln('Tickets con monto mayor a ', montoMinimo:0:2, ':');
+	todosLosTickets.reset();
+	imprimirTicketsConMontoMayor(todosLosTickets, montoMinimo);
+end.
